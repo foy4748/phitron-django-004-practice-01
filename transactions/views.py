@@ -99,8 +99,8 @@ class WithdrawMoneyView(TransactionCreateMixin):
 
     def dispatch(self, request, *args, **kwargs):
         d = super().dispatch(request, *args, **kwargs)
-        site_custom_settings = SiteCustomConfigs.objects.all(id=0).first()
-        if site_custom_settings.is_bankrupt is False:
+        site_custom_settings = SiteCustomConfigs.objects.all().first()
+        if site_custom_settings.is_bankrupt is True:
             return HttpResponse("Bank is bankrupt".encode("utf-8"))
         return d
 
