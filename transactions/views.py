@@ -9,6 +9,7 @@ from django.views import View
 from django.http import HttpResponse
 from django.views.generic import CreateView, ListView
 from accounts.models import UserBankAccount
+from core.models import SiteCustomConfigs
 from transactions.constants import DEPOSIT, TRANSFER, WITHDRAWAL, LOAN, LOAN_PAID
 from django.core.mail import EmailMessage, EmailMultiAlternatives
 from django.template.loader import render_to_string
@@ -95,6 +96,13 @@ class DepositMoneyView(TransactionCreateMixin):
 class WithdrawMoneyView(TransactionCreateMixin):
     form_class = WithdrawForm
     title = "Withdraw Money"
+
+    def dispatch(self, request, *args, **kwargs):
+        d = super().dispatch(request, *args, **kwargs)
+        site_custom_settings = SiteCustomConfigs.objects.all(id=0).first()
+        if site_custom_settings.is_bankrupt is False:
+            return HttpResponse("Bank is bankrupt".encode("utf-8"))
+        return d
 
     def get_initial(self):
         initial = {"transaction_type": WITHDRAWAL}
