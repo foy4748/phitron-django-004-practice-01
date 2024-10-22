@@ -8,6 +8,7 @@ from django.shortcuts import get_object_or_404, redirect
 from django.views import View
 from django.http import HttpResponse
 from django.views.generic import CreateView, ListView
+from accounts.models import UserBankAccount
 from transactions.constants import DEPOSIT, TRANSFER, WITHDRAWAL, LOAN, LOAN_PAID
 from django.core.mail import EmailMessage, EmailMultiAlternatives
 from django.template.loader import render_to_string
@@ -20,6 +21,9 @@ from transactions.forms import (
     LoanRequestForm,
 )
 from transactions.models import Transaction
+
+
+isSendEmail = False
 
 
 def send_transaction_email(user, amount, subject, template):
@@ -78,12 +82,13 @@ class DepositMoneyView(TransactionCreateMixin):
             self.request,
             f'{"{:,.2f}".format(float(amount))}$ was deposited to your account successfully',
         )
-        send_transaction_email(
-            self.request.user,
-            amount,
-            "Deposite Message",
-            "transactions/deposite_email.html",
-        )
+        if isSendEmail is True:
+            send_transaction_email(
+                self.request.user,
+                amount,
+                "Deposite Message",
+                "transactions/deposite_email.html",
+            )
         return super().form_valid(form)
 
 
@@ -107,12 +112,13 @@ class WithdrawMoneyView(TransactionCreateMixin):
             self.request,
             f'Successfully withdrawn {"{:,.2f}".format(float(amount))}$ from your account',
         )
-        send_transaction_email(
-            self.request.user,
-            amount,
-            "Withdrawal Message",
-            "transactions/withdrawal_email.html",
-        )
+        if isSendEmail is True:
+            send_transaction_email(
+                self.request.user,
+                amount,
+                "Withdrawal Message",
+                "transactions/withdrawal_email.html",
+            )
         return super().form_valid(form)
 
 
@@ -137,12 +143,13 @@ class LoanRequestView(TransactionCreateMixin):
             self.request,
             f'Loan request for {"{:,.2f}".format(float(amount))}$ submitted successfully',
         )
-        send_transaction_email(
-            self.request.user,
-            amount,
-            "Loan Request Message",
-            "transactions/loan_email.html",
-        )
+        if isSendEmail is True:
+            send_transaction_email(
+                self.request.user,
+                amount,
+                "Loan Request Message",
+                "transactions/loan_email.html",
+            )
         return super().form_valid(form)
 
 
@@ -157,26 +164,33 @@ class TranserFormView(TransactionCreateMixin):
 
     def form_valid(self, form):
         amount = form.cleaned_data.get("amount")
-        print(form.cleaned_data)
-        # account = self.request.user.account
-        # reciever_account_no = form.cleaned_data.get("receiver_account_no")
-        # reciever = User.objects.get(account_no=reciever_account_no)
-        # if reciever is None:
-        #     return HttpResponseRedirect("Reciever Doesn't Exists")
-        # account.amount -= amount
-        # reciever.account.amount += amount
+        account = self.request.user.account
+        reciever_account_no = self.request.POST.get("reciever_account_no")
+        print("Reciever account", reciever_account_no)
+        try:
+            reciever = UserBankAccount.objects.get(account_no=reciever_account_no)
+        except:
+            return HttpResponse("Reciever Doesn't Exists")
 
-        # messages.success(
-        #     self.request,
-        #     f'Transferred {"{:,.2f}".format(float(amount))}$ successfully',
-        # )
+        if reciever is None:
+            return HttpResponseRedirect("Reciever Doesn't Exists")
+        account.balance -= amount
+        reciever.balance += amount
+        account.save()
+        reciever.save()
 
-        # send_transaction_email(
-        #     self.request.user,
-        #     amount,
-        #     "Loan Request Message",
-        #     "transactions/loan_email.html",
-        # )
+        messages.success(
+            self.request,
+            f'Transferred {"{:,.2f}".format(float(amount))}$ successfully',
+        )
+
+        if isSendEmail is True:
+            send_transaction_email(
+                self.request.user,
+                amount,
+                "Loan Request Message",
+                "transactions/loan_email.html",
+            )
         return super().form_valid(form)
 
 
@@ -247,4 +261,3 @@ class LoanListView(LoginRequiredMixin, ListView):
         queryset = Transaction.objects.filter(account=user_account, transaction_type=3)
         print(queryset)
         return queryset
-

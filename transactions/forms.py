@@ -72,14 +72,13 @@ class TransferForm(TransactionForm):
     # def __init__(self, *args, **kwargs):
     #     super().__init__(*args, **kwargs)
     #     self.fields["reciever_account_no"] = forms.DecimalField()
-    reciever_account_no = forms.DecimalField()
+    reciever_account_no = forms.NumberInput()
 
     def clean_amount(self):
         account = self.account
         balance = account.balance  # 1000
         amount = self.cleaned_data.get("amount")
-        reciever_account_no = self.cleaned_data.get("reciever_account_no")
-
+        print(self.cleaned_data)
         if amount is not None and amount <= 0:
             raise forms.ValidationError(
                 f"You have {balance} $ in your account. "
@@ -91,5 +90,10 @@ class TransferForm(TransactionForm):
                 "You can not transfer more than your account balance"
             )
 
-        return {"amount": amount, "reciever_account_no": reciever_account_no}
+        return amount
 
+    def clean_reciever_account_no(self):
+        print(self.cleaned_data)
+        acc_no = self.cleaned_data.get("reciever_account_no")
+        print("FROM FORM", acc_no)
+        return acc_no
