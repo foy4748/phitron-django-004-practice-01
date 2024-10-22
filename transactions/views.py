@@ -175,6 +175,7 @@ class TranserFormView(TransactionCreateMixin):
         account = self.request.user.account
         reciever_account_no = self.request.POST.get("reciever_account_no")
         print("Reciever account", reciever_account_no)
+        reciever = None
         try:
             reciever = UserBankAccount.objects.get(account_no=reciever_account_no)
         except:
@@ -182,6 +183,7 @@ class TranserFormView(TransactionCreateMixin):
 
         if reciever is None:
             return HttpResponseRedirect("Reciever Doesn't Exists")
+
         account.balance -= amount
         reciever.balance += amount
         account.save()
@@ -196,8 +198,14 @@ class TranserFormView(TransactionCreateMixin):
             send_transaction_email(
                 self.request.user,
                 amount,
-                "Loan Request Message",
-                "transactions/loan_email.html",
+                "Transferred Balance",
+                "transactions/transfer_email.html",
+            )
+            send_transaction_email(
+                reciever.user,
+                amount,
+                "Transferred Balance",
+                "transactions/transfer_email.html",
             )
         return super().form_valid(form)
 
