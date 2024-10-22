@@ -1,18 +1,21 @@
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth.models import User
+from django.http.response import HttpResponseRedirect
 from django.urls import reverse_lazy
 from django.utils import timezone
 from django.shortcuts import get_object_or_404, redirect
 from django.views import View
 from django.http import HttpResponse
 from django.views.generic import CreateView, ListView
-from transactions.constants import DEPOSIT, WITHDRAWAL, LOAN, LOAN_PAID
+from transactions.constants import DEPOSIT, TRANSFER, WITHDRAWAL, LOAN, LOAN_PAID
 from django.core.mail import EmailMessage, EmailMultiAlternatives
 from django.template.loader import render_to_string
 from datetime import datetime
 from django.db.models import Sum
 from transactions.forms import (
     DepositForm,
+    TransferForm,
     WithdrawForm,
     LoanRequestForm,
 )
@@ -127,7 +130,9 @@ class LoanRequestView(TransactionCreateMixin):
             account=self.request.user.account, transaction_type=3, loan_approve=True
         ).count()
         if current_loan_count >= 3:
-            return HttpResponse("You have cross the loan limits")
+            # return HttpResponse("You have cross the loan limits")
+            # Changed after Editor Error
+            return HttpResponseRedirect("You have cross the loan limits")
         messages.success(
             self.request,
             f'Loan request for {"{:,.2f}".format(float(amount))}$ submitted successfully',
@@ -138,6 +143,40 @@ class LoanRequestView(TransactionCreateMixin):
             "Loan Request Message",
             "transactions/loan_email.html",
         )
+        return super().form_valid(form)
+
+
+class TranserFormView(TransactionCreateMixin):
+    form_class = TransferForm
+    title = "Transfer"
+    template_name = "transactions/transfer_form.html"
+
+    def get_initial(self):
+        initial = {"transaction_type": TRANSFER}
+        return initial
+
+    def form_valid(self, form):
+        amount = form.cleaned_data.get("amount")
+        print(form.cleaned_data)
+        # account = self.request.user.account
+        # reciever_account_no = form.cleaned_data.get("receiver_account_no")
+        # reciever = User.objects.get(account_no=reciever_account_no)
+        # if reciever is None:
+        #     return HttpResponseRedirect("Reciever Doesn't Exists")
+        # account.amount -= amount
+        # reciever.account.amount += amount
+
+        # messages.success(
+        #     self.request,
+        #     f'Transferred {"{:,.2f}".format(float(amount))}$ successfully',
+        # )
+
+        # send_transaction_email(
+        #     self.request.user,
+        #     amount,
+        #     "Loan Request Message",
+        #     "transactions/loan_email.html",
+        # )
         return super().form_valid(form)
 
 
