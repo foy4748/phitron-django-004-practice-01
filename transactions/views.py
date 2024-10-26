@@ -198,13 +198,13 @@ class TranserFormView(TransactionCreateMixin):
             send_transaction_email(
                 self.request.user,
                 amount,
-                "Transferred Balance",
+                f"Transferred Balance to {reciever.user.username}",
                 "transactions/transfer_email.html",
             )
             send_transaction_email(
                 reciever.user,
                 amount,
-                "Transferred Balance",
+                f"Received Balance from {self.request.user.username}",
                 "transactions/transfer_email.html",
             )
         return super().form_valid(form)
