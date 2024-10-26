@@ -12,6 +12,8 @@ password:  TestTest$1
 
 - DEMO Video - [Google Drive](https://drive.google.com/file/d/1Pzo-3ivlLQHzRTnYYn_5T_UW5yZOLqUq/view?usp=drive_link)
 
+- DEMO Video - Practice Day 2 - [Google Drive](https://drive.google.com/file/d/1Pzo-3ivlLQHzRTnYYn_5T_UW5yZOLqUq/view?usp=drive_link)
+
 - Requirement Doc : [Google Doc](https://docs.google.com/document/d/15P6eGfrebgCP98Qun49xebUgqIlE8k159fTuu1MEQmM/edit)    
 
 After cloning this repository, you need to initiate a virtual environment. Then install necessary packages within it.
